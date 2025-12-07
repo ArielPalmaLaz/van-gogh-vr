@@ -1,0 +1,68 @@
+[
+  {
+    "id": 1,
+    "title": "Los Bebedores",
+    "author": "Vincent Van Gogh",
+    "description": "Inspirado en un grabado de Honoré Daumier, Van Gogh reinterpretó la escena para mostrar cómo el alcohol atraviesa distintas etapas de la vida. Más que una simple parodia, la obra refleja su interés por los temas sociales y la realidad de las clases trabajadoras. Los colores densos y el modelado expresivo transmiten un ciclo repetitivo y casi fatalista del consumo de alcohol.",
+    "src": "assets/textures/paintings/the_drinkers.jpg",
+    "width": 1.5,
+    "height": 1.2,
+    "position": { "x": -4.0, "y": 1.6, "z": -2.0 },
+    "rotation": { "y": 1.0 }
+  },
+  {
+    "id": 2,
+    "title": "Mujer Campesina Cavando",
+    "author": "Vincent Van Gogh",
+    "description": "Perteneciente a su periodo de Nuenen, esta pintura revela la profunda admiración de Van Gogh por la dignidad del trabajo rural. La postura encorvada, los tonos oscuros y la luz tenue refuerzan la dureza de la vida campesina, mientras que el trazo firme y compacto refleja la solidez de la figura. Es un ejemplo de cómo Van Gogh buscó expresar la humanidad y la fuerza silenciosa de las labores del campo.",
+    "src": "assets/textures/paintings/peasant_woman.jpg",
+    "width": 1.4,
+    "height": 1.1,
+    "position": { "x": -2.5, "y": 1.6, "z": -3.5 },
+    "rotation": { "y": 0.5 }
+  },
+  {
+    "id": 3,
+    "title": "El Dormitorio en Arles",
+    "author": "Vincent Van Gogh",
+    "description": "Representa su habitación en la Casa Amarilla, un lugar donde Van Gogh buscaba estabilidad y descanso en medio de su turbulencia personal. La perspectiva intencionalmente distorsionada, los contornos marcados y los colores planos quieren transmitir calma, simplicidad y una especie de refugio espiritual. Para Van Gogh, esta obra simbolizaba la serenidad que anhelaba y un hogar donde pudiera encontrar equilibrio.",
+    "src": "assets/textures/paintings/the_bedroom.jpg",
+    "width": 1.5,
+    "height": 1.2,
+    "position": { "x": 0, "y": 1.6, "z": -4.0 },
+    "rotation": { "y": 0 }
+  },
+  {
+    "id": 4,
+    "title": "Madame Roulin (La Berceuse)",
+    "author": "Vincent Van Gogh",
+    "description": "Retrata a Augustine Roulin, esposa del cartero Joseph Roulin, una de las personas que más afecto y apoyo brindaron a Van Gogh en Arles. Con colores cálidos y rítmicos, Van Gogh buscó crear el efecto de una melodía visual, como una canción de cuna que transmite consuelo. La cuerda de la cuna que ella sostiene simboliza protección, maternidad y un vínculo emocional sereno que contrasta con la agitación del artista.",
+    "src": "assets/textures/paintings/madame_roulin.jpg",
+    "width": 0.9,
+    "height": 1.1,
+    "position": { "x": 2.5, "y": 1.6, "z": -3.5 },
+    "rotation": { "y": -0.5 }
+  },
+  {
+    "id": 5,
+    "title": "Autorretrato",
+    "author": "Vincent Van Gogh",
+    "description": "Pintado durante su estancia en París, este autorretrato refleja una etapa de exploración técnica influenciada por el puntillismo y el uso de colores complementarios. El rostro intenso y la mirada introspectiva muestran la búsqueda de identidad del artista en un período de transición. El vibrante contraste cromático sugiere energía interna, tensión emocional y un proceso de autodescubrimiento profundamente expresivo.",
+    "src": "assets/textures/paintings/self_portrait.jpg",
+    "width": 0.9,
+    "height": 1.1,
+    "position": { "x": 4.0, "y": 1.6, "z": -2.0 },
+    "rotation": { "y": -1.0 }
+  },
+  {
+    "id": 6,
+    "title": "El Jardín del Poeta",
+    "author": "Vincent Van Gogh",
+    "description": "Inspirado en el jardín público de Arles, Van Gogh lo transforma en un espacio simbólico donde la naturaleza se convierte en poesía visual. Asociándolo con Petrarca y Boccaccio, imagina el lugar como un refugio espiritual donde la creatividad florece. Los colores vibrantes y las pinceladas ondulantes dotan al paisaje de un ritmo casi musical, expresando serenidad, inspiración y el deseo de trascender mediante el arte.",
+    "src": "assets/textures/paintings/poets_garden.jpg",
+    "width": 1.5,
+    "height": 1.2,
+    "position": { "x": 5.0, "y": 1.6, "z": 0.0 },
+    "rotation": { "y": -1.5 }
+  }
+]
