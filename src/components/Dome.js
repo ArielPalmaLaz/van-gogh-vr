@@ -12,7 +12,6 @@ export function createDome() {
     const dome = new THREE.Mesh(geometry, material);
     dome.position.set(0, 0, 0);
     
-    // CAMBIO: Ya no se llama "WorldFloor", ahora es solo decoración
     dome.name = "DomeWalls"; 
 
     return dome;

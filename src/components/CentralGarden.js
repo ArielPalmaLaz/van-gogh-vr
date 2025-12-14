@@ -4,19 +4,18 @@ export function createCentralGarden() {
     const gardenGroup = new THREE.Group();
 
     // --- 1. LA BASE (TIERRA/CESPED) ---
-    // Sustituimos la plataforma negra lisa por algo más orgánico pero contenido
     const soilGeo = new THREE.CylinderGeometry(4, 4.5, 0.5, 32);
     const soilMat = new THREE.MeshStandardMaterial({ 
-        color: 0x2b3a42, // Gris azulado oscuro (pizarra/tierra moderna)
+        color: 0x2b3a42, // Gris azulado oscuro 
         roughness: 0.9,
-        flatShading: true // Da el aspecto "Low Poly" facetado
+        flatShading: true 
     });
     const soil = new THREE.Mesh(soilGeo, soilMat);
     soil.position.y = 0.25;
     soil.receiveShadow = true;
     gardenGroup.add(soil);
 
-    // --- 2. EL ÁRBOL CENTRAL (Escultural) ---
+    // --- 2. EL ÁRBOL CENTRAL 
     
     // Tronco
     const trunkGeo = new THREE.CylinderGeometry(0.3, 0.6, 3.5, 7);
@@ -26,13 +25,13 @@ export function createCentralGarden() {
         flatShading: true 
     });
     const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-    trunk.position.y = 0.5 + (3.5 / 2); // Base + mitad altura
+    trunk.position.y = 0.5 + (3.5 / 2); 
     trunk.castShadow = true;
     trunk.receiveShadow = true;
     gardenGroup.add(trunk);
 
     // Copa del árbol (Icosaedro para look geométrico)
-    const leavesGeo = new THREE.IcosahedronGeometry(2.5, 0); // Radio 2.5, detalle 0 (muy facetado)
+    const leavesGeo = new THREE.IcosahedronGeometry(2.5, 0); 
     const leavesMat = new THREE.MeshStandardMaterial({ 
         color: 0x4caf50, // Verde vibrante pero elegante
         roughness: 0.8,
@@ -43,18 +42,18 @@ export function createCentralGarden() {
     leaves.castShadow = true;
     gardenGroup.add(leaves);
 
-    // --- 3. DETALLES (ROCAS Y ARBUSTOS) ---
+    // --- 3. DETALLES ---
     
     // Función auxiliar para aleatoriedad
     const random = (min, max) => Math.random() * (max - min) + min;
 
-    // Rocas (Dodecaedros grises)
+    // Rocas 
     const rockGeo = new THREE.DodecahedronGeometry(0.6, 0);
     const rockMat = new THREE.MeshStandardMaterial({ color: 0x777777, flatShading: true });
 
     for (let i = 0; i < 5; i++) {
         const rock = new THREE.Mesh(rockGeo, rockMat);
-        // Posición aleatoria en el radio del suelo (evitando el centro exacto)
+        // Posición aleatoria en el radio del suelo 
         const angle = random(0, Math.PI * 2);
         const radius = random(1.5, 3); 
         
@@ -67,7 +66,7 @@ export function createCentralGarden() {
         gardenGroup.add(rock);
     }
 
-    // Arbustos pequeños (Tetraedros verdes)
+    // Arbustos pequeños 
     const bushGeo = new THREE.ConeGeometry(0.4, 0.8, 5);
     const bushMat = new THREE.MeshStandardMaterial({ color: 0x66bb6a, flatShading: true });
 
@@ -84,7 +83,7 @@ export function createCentralGarden() {
         gardenGroup.add(bush);
     }
 
-    // --- 4. LUCES DECORATIVAS (Luciernagas estáticas) ---
+    // --- 4. LUCES DECORATIVAS  ---
     // Pequeños puntos de luz cálida flotando cerca del árbol
     const fireflyGeo = new THREE.SphereGeometry(0.05, 8, 8);
     const fireflyMat = new THREE.MeshBasicMaterial({ color: 0xffffaa });

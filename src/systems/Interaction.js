@@ -12,7 +12,7 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
     let hoveredButton = null; // Botones
     let savedButtonColor = new THREE.Color();
 
-    // --- 1. INDICADOR DE TELETRANSPORTE (NUEVO) ---
+    // --- 1. INDICADOR DE TELETRANSPORTE  ---
     const markerGeo = new THREE.RingGeometry(0.2, 0.25, 32); // Anillo fino
     markerGeo.rotateX(-Math.PI / 2); // Acostado en el suelo
     const markerMat = new THREE.MeshBasicMaterial({ 
@@ -106,7 +106,7 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
                     resetHover(); 
                 });
                 
-                // Posicionar panel... (código igual al anterior)
+                // Posicionar panel..
                 const distance = 1.5; 
                 const direction = new THREE.Vector3();
                 camera.getWorldDirection(direction);
@@ -140,7 +140,7 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
 
-        // 1. SI HAY PANEL ABIERTO (Solo lógica de botones)
+        // 1. SI HAY PANEL ABIERTO 
         if (currentPanel) {
             teleportMarker.visible = false; // No mostrar marcador
             const intersects = raycaster.intersectObjects(currentPanel.children, true);

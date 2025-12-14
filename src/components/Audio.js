@@ -5,7 +5,7 @@ export function setupAudio(camera) {
     const listener = new THREE.AudioListener();
     camera.add(listener);
 
-    // 2. Crear la fuente de sonido global (Sonido Ambiente)
+    // 2. Crear la fuente de sonido global 
     const sound = new THREE.Audio(listener);
 
     // 3. Cargar el archivo de audio
@@ -16,7 +16,7 @@ export function setupAudio(camera) {
         sound.setVolume(0.3); // Volumen suave (0.0 a 1.0)
     });
 
-    // 4. Lógica de "Autoplay" (Requiere interacción del usuario)
+    // 4. Lógica de "Autoplay" 
     // Los navegadores no permiten reproducir audio sin que el usuario haya interactuado primero.
     const startAudio = () => {
         // Reanudar contexto de audio si estaba suspendido

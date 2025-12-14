@@ -7,7 +7,6 @@ export function loadGallery(scene) {
     const loader = new THREE.TextureLoader();
     const fontLoader = new FontLoader();
 
-    // Cargamos la fuente para los títulos 3D
     fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', (font) => {
 
         // --- CONFIGURACIÓN DE LA "V" INVERTIDA ---
@@ -21,27 +20,27 @@ export function loadGallery(scene) {
         const monoHeight = 4.5;   
         const monoDepth = 0.5;  
 
-        // Material del Muro (Gris oscuro estándar)
+        // Material del Muro 
         const wallMat = new THREE.MeshStandardMaterial({
             color: 0x222222, 
             roughness: 0.6,
         });
 
-        // Material del Zócalo (Negro, más rugoso)
+        // Material del Zócalo 
         const baseMat = new THREE.MeshStandardMaterial({
             color: 0x111111,
             roughness: 0.8,
             metalness: 0.2
         });
 
-        // Material del Marco (Dorado)
+        // Material del Marco 
         const frameMat = new THREE.MeshStandardMaterial({
             color: 0xCFB53B, 
             roughness: 0.4,
             metalness: 0.6
         });
 
-        // Material del Texto (Blanco)
+        // Material del Texto 
         const textMat = new THREE.MeshStandardMaterial({
             color: 0xffffff, 
             roughness: 0.4
@@ -53,7 +52,7 @@ export function loadGallery(scene) {
         artworkData.forEach((data, index) => {
             const group = new THREE.Group();
 
-            // 1. POSICIÓN (Formación en V)
+            // 1. POSICIÓN 
             const isLeft = index % 2 === 0;
             const sideMultiplier = isLeft ? -1 : 1;
             const rowPos = Math.floor(index / 2); 
@@ -65,7 +64,7 @@ export function loadGallery(scene) {
 
             group.position.set(posX, 0, posZ);
 
-            // 2. ROTACIÓN (Mirando hacia la entrada -60 grados)
+            // 2. ROTACIÓN 
             const deltaX = (endX - startX) * sideMultiplier;
             const deltaZ = (endZ - startZ);
             const wallAngle = Math.atan2(deltaX, deltaZ);
@@ -73,10 +72,10 @@ export function loadGallery(scene) {
             const faceOffset = isLeft ? -Math.PI / 2 + turnToEntrance : Math.PI / 2 - turnToEntrance;
             group.rotation.y = wallAngle + faceOffset;
 
-            // 3. ESTRUCTURA DEL MONOLITO (Estilizado)
+            // 3. ESTRUCTURA DEL MONOLITO 
             const monolithGroup = new THREE.Group();
             
-            // A. El Muro (Cuerpo principal)
+            // A. El Muro 
             const wallGeo = new THREE.BoxGeometry(monoWidth, monoHeight, monoDepth);
             const wallMesh = new THREE.Mesh(wallGeo, wallMat);
             wallMesh.position.y = monoHeight / 2; 
@@ -84,8 +83,8 @@ export function loadGallery(scene) {
             wallMesh.receiveShadow = true;
             monolithGroup.add(wallMesh);
 
-            // B. El Zócalo (Base ancha)
-            const baseHeight = 0.6; // 60cm de alto
+            // B. El Zócalo 
+            const baseHeight = 0.6; 
             const baseGeo = new THREE.BoxGeometry(
                 monoWidth + 0.2, 
                 baseHeight, 
@@ -99,7 +98,7 @@ export function loadGallery(scene) {
 
             group.add(monolithGroup);
 
-            // 4. CUADRO (Cálculo de dimensiones y posición)
+            // 4. CUADRO 
             const texture = loader.load(data.src);
             texture.colorSpace = THREE.SRGBColorSpace;
             
@@ -119,10 +118,10 @@ export function loadGallery(scene) {
                 finalWidth = finalHeight / aspectRatio;
             }
 
-            // --- LÓGICA DE ALTURA AJUSTADA ---
+           
             const isHorizontal = finalWidth > finalHeight;
             
-            // CAMBIO AQUÍ: Subimos los verticales de 1.1 a 1.3
+            
             const heightFromFloor = isHorizontal ? 1.5 : 1.3; 
             
             const centerY = heightFromFloor + (finalHeight / 2);
@@ -153,7 +152,7 @@ export function loadGallery(scene) {
             imgMesh.userData = { isInteractable: true, ...data };
             group.add(imgMesh);
 
-            // 5. ILUMINACIÓN (Foco)
+            // 5. ILUMINACIÓN 
             const spot = new THREE.SpotLight(0xffffff, 12); 
             spot.position.set(0, monoHeight + 1, 5);
             spot.target = imgMesh;
@@ -164,7 +163,7 @@ export function loadGallery(scene) {
             group.add(spot);
             group.add(spot.target);
 
-            // 6. TÍTULO 3D (Debajo del marco)
+            // 6. TÍTULO 3D 
             const textGeo = new TextGeometry(data.title, {
                 font: font,
                 size: 0.12, 
@@ -179,7 +178,7 @@ export function loadGallery(scene) {
 
             const textMesh = new THREE.Mesh(textGeo, textMat);
 
-            // Calculamos posición relativa al marco
+            
             const frameBottomY = frameMesh.position.y - (finalHeight / 2) - frameBorder;
             
             textMesh.position.y = frameBottomY - 0.25;
