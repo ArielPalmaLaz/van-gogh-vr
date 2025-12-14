@@ -1,54 +1,74 @@
 import * as THREE from 'three';
 import { createScene } from './core/sceneSetup.js';
-import { createDome } from './components/Dome.js';
 import { createFloor } from './components/Floor.js';
+import { createRoom } from './components/Room.js';
 import { loadGallery } from './components/Gallery.js';
+import { createCentralGarden } from './components/CentralGarden.js'; // NUEVO
 import { setupControllers } from './systems/Controllers.js';
 import { setupInteraction } from './systems/Interaction.js';
+import { setupCameraControls } from './systems/CameraControls.js';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import { setupAudio } from './components/Audio.js';
 
-// CAMBIO 1: Importamos nuestro nuevo control en lugar de OrbitControls
-import { setupCameraControls } from './systems/CameraControls.js'; 
-
-// 1. Configuración Básica
+// 1. CONFIGURACIÓN BÁSICA DE LA ESCENA
 const { scene, camera, renderer } = createScene();
 const container = document.getElementById('container');
 container.appendChild(renderer.domElement);
 
-// 2. User Rig
+// --- ILUMINACIÓN AMBIENTAL ---
+// Muy tenue para mantener el drama. La luz principal viene de los focos de los cuadros.
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.05); 
+scene.add(ambientLight);
+
+// 2. USER RIG (Jugador)
 const userGroup = new THREE.Group();
-userGroup.position.set(0, 0, 0); 
+// Posición inicial: Z=20 (En la entrada de la "V", mirando hacia el jardín)
+userGroup.position.set(0, 0, 20); 
 scene.add(userGroup);
 userGroup.add(camera);
 
-// 3. Botón VR
+// 3. BOTÓN VR
 document.body.appendChild(VRButton.createButton(renderer));
 
-// 4. Entorno
-const dome = createDome();
-scene.add(dome);
-const floor = createFloor();
+// 4. ENTORNO ARQUITECTÓNICO
+// A) La Habitación (Cúpula/Paredes exteriores)
+const room = createRoom(); 
+scene.add(room);
+
+// B) El Suelo (Textura de Madera)
+const floor = createFloor(); 
 scene.add(floor);
+
+// C) El Jardín Central (Decoración Low Poly en el centro)
+const garden = createCentralGarden();
+garden.position.set(0, 0, 0); // Centro exacto
+scene.add(garden);
+
+// 5. GALERÍA DE ARTE (Monolitos en V)
 loadGallery(scene);
 
-// 5. Controles VR
+// 6. SISTEMA DE AUDIO (Música ambiente + Click to play)
+setupAudio(camera);
+
+// 7. CONTROLES (VR y PC)
+// A) Controladores VR (Manos)
 const { controller1, controller2 } = setupControllers(scene, renderer);
 userGroup.add(controller1);
 userGroup.add(controller2);
+
+// Modelos de los mandos (Grips)
 const controllerGrip1 = renderer.xr.getControllerGrip(0);
 const controllerGrip2 = renderer.xr.getControllerGrip(1);
 userGroup.add(controllerGrip1);
 userGroup.add(controllerGrip2);
 
-// CAMBIO 2: Usamos el nuevo sistema de cámara manual
-// Ya no creamos OrbitControls, lo que elimina el conflicto de "mirar al centro"
+// B) Controles de Cámara PC (WASD + Mouse)
 setupCameraControls(camera, renderer);
 
-// 7. Interacción
+// 8. SISTEMA DE INTERACCIÓN (Raycaster, Hover, Clics)
 setupInteraction(scene, renderer, camera, userGroup);
 
-// 8. Loop
+// 9. BUCLE DE RENDERIZADO
 renderer.setAnimationLoop(() => {
-    // Ya no hay controls.update()
     renderer.render(scene, camera);
 });
