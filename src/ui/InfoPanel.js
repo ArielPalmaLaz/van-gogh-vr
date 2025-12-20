@@ -69,12 +69,10 @@ export function createInfoPanel(artworkData, closeCallback) {
         transparent: true 
     }));
     
-    // Subimos un poco la imagen para dejar espacio abajo
     imgMesh.position.set(0, 0.6, 0.05); 
     contentGroup.add(imgMesh);
 
     // --- Panel Derecho (Textos y Controles) ---
-    // Movemos todo el bloque de texto un poco más a la derecha y arriba
     const rightPanelX = 1.9;
 
     const titleData = createTextTexture(artworkData.title || "Sin Título", 50, 600, 'left');
@@ -93,9 +91,8 @@ export function createInfoPanel(artworkData, closeCallback) {
     descMesh.position.set(rightPanelX, 0.4, 0.05); 
     contentGroup.add(descMesh);
 
-    // --- Botonera de Zoom (AHORA EN EL PANEL DERECHO) ---
-    // Los colocamos debajo de la descripción, muy cómodos de alcanzar.
-    const zoomY = -0.3; // Altura pecho/estómago (~1.3m del suelo)
+    // --- Botonera de Zoom ---
+    const zoomY = -0.3; 
     
     const btnZoomOut = createButton("➖", 0x44ff44, () => {
         if (imgMesh.scale.x > 0.5) imgMesh.scale.multiplyScalar(0.8);
@@ -113,8 +110,23 @@ export function createInfoPanel(artworkData, closeCallback) {
     btnZoomIn.position.set(rightPanelX + 0.4, zoomY, 0.05);
     contentGroup.add(btnZoomIn);
 
-    // --- Botón CERRAR (Central) ---
-    // Lo subimos mucho (de -1.8 a -0.9). Quedará debajo de la imagen.
+    // --- BOTÓN DE ALTAVOZ (LECTURA) ---
+    const btnSpeaker = createButton("🔊 LECTURA", 0xaaaaaa, () => {
+        if ('speechSynthesis' in window) {
+            if (window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            } else {
+                const textToRead = `${artworkData.title}. ${artworkData.description}`;
+                const utterance = new SpeechSynthesisUtterance(textToRead);
+                utterance.lang = 'es-ES';
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+    });
+    btnSpeaker.position.set(-rightPanelX, zoomY, 0.05);
+    contentGroup.add(btnSpeaker);
+
+    // --- Botón CERRAR ---
     const btnClose = createButton("❌ CERRAR VISTA", 0xff4444, closeCallback);
     btnClose.position.set(0, -0.9, 0.05); 
     contentGroup.add(btnClose);
