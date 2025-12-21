@@ -2,47 +2,155 @@ import * as THREE from 'three';
 
 export function createRoom() {
     const group = new THREE.Group();
-    const radius = 25;
-    const height = 8;
+    const radius = 25;       
+    const height = 8;        
+    const pillarHeight = 5;  
+    const textureLoader = new THREE.TextureLoader();
+    const path = 'assets/textures/';
 
-    // MATERIALES
-    const darkMaterial = new THREE.MeshStandardMaterial({
-        color: 0x050505, // Negro profundo
-        roughness: 0.9,
+    // --- 1. CONFIGURACIÓN DE LA ENTRADA ---
+    const entranceWidth = 4.5; 
+    const gapAngle = entranceWidth / radius; 
+    const wallThetaStart = gapAngle / 2;
+    const wallThetaLength = (Math.PI * 2) - gapAngle;
+
+    // --- 2. MATERIALES ---
+    const loadPBR = (file, repeat = 1) => {
+        const tex = textureLoader.load(`${path}${file}`);
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(repeat, repeat);
+        return tex;
+    };
+
+    const concreteMaterial = new THREE.MeshStandardMaterial({
+        map: loadPBR('Concrete048_1K-PNG_Color.png', 16),
+        normalMap: loadPBR('Concrete048_1K-PNG_NormalGL.png', 16),
+        roughnessMap: loadPBR('Concrete048_1K-PNG_Roughness.png', 16),
+        side: THREE.DoubleSide, 
+        roughness: 1.0
+    });
+
+    const roofDomeMaterial = new THREE.MeshStandardMaterial({
+        color: 0x999999,      
+        metalness: 0.9,
+        roughness: 0.15,
+        side: THREE.FrontSide 
+    });
+
+    const accentMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x1a1a1a,
+        roughness: 0.8,
+        metalness: 0.2
+    });
+
+    const darkMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x050505, 
+        roughness: 0.9, 
         side: THREE.BackSide 
     });
 
-    // 1. PAREDES EXTERIORES 
-    const wallGeo = new THREE.CylinderGeometry(radius, radius, height, 64, 1, true);
-    const walls = new THREE.Mesh(wallGeo, darkMaterial);
-    walls.position.y = height / 2;
-    walls.name = "Architecture";
-    group.add(walls);
+    const grassMaterial = new THREE.MeshStandardMaterial({ 
+        map: loadPBR('grass_color.jpg', 40), 
+        normalMap: loadPBR('grass_normal.jpg', 40),
+        color: 0x445533,
+        roughness: 1.0 
+    });
 
-    // 2. TECHO 
-    const ceilingGeo = new THREE.CircleGeometry(radius, 64);
-    const ceiling = new THREE.Mesh(ceilingGeo, darkMaterial);
-    ceiling.rotation.x = Math.PI / 2; // Mirando hacia abajo
+    const glassMaterial = new THREE.MeshStandardMaterial({
+        color: 0x111111, transparent: true, opacity: 0.5, roughness: 0.1, metalness: 0.8
+    });
+
+    // --- 3. SUELO EXTERIOR ---
+    const grassFloor = new THREE.Mesh(new THREE.RingGeometry(radius, 50, 64), grassMaterial);
+    grassFloor.rotation.x = -Math.PI / 2;
+    grassFloor.position.y = 0.01; 
+    grassFloor.name = "WorldFloor"; 
+    group.add(grassFloor);
+
+    // --- 4. ESTRUCTURA: ZÓCALO Y CORNISA ---
+    const zocalo = new THREE.Mesh(new THREE.CylinderGeometry(radius + 0.3, radius + 0.3, 0.5, 128, 1, true, wallThetaStart, wallThetaLength), accentMaterial);
+    zocalo.material.side = THREE.FrontSide;
+    zocalo.name = "Obstacle";
+    zocalo.position.y = 0.25; 
+    group.add(zocalo);
+
+    const cornisa = new THREE.Mesh(new THREE.CylinderGeometry(radius + 0.2, radius + 0.1, 0.4, 128, 1, true), accentMaterial);
+    cornisa.material.side = THREE.FrontSide;
+    cornisa.name = "Obstacle";
+    cornisa.position.y = height; 
+    group.add(cornisa);
+
+    // --- 5. PAREDES Y PILARES ---
+    const bottomWalls = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, pillarHeight, 128, 1, true, wallThetaStart, wallThetaLength), concreteMaterial);
+    bottomWalls.name = "Obstacle";
+    bottomWalls.position.y = pillarHeight / 2; 
+    group.add(bottomWalls);
+
+    const topWalls = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, height - pillarHeight, 128, 1, true, 0, Math.PI * 2), concreteMaterial);
+    topWalls.name = "Obstacle";
+    topWalls.position.y = pillarHeight + ((height - pillarHeight) / 2); 
+    group.add(topWalls);
+
+    // Pilares
+    for (let i = 0; i < 16; i++) {
+        const angle = (i / 16) * Math.PI * 2;
+        let norm = angle > Math.PI ? angle - Math.PI * 2 : angle;
+        if (Math.abs(norm) < gapAngle / 2 + 0.1) continue;
+        const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.3, height - 0.1, 0.05), new THREE.MeshStandardMaterial({ color: 0x0a0a0a }));
+        pillar.name = "Obstacle";
+        pillar.position.set((radius + 0.04) * Math.sin(angle), height / 2, (radius + 0.04) * Math.cos(angle));
+        pillar.lookAt(0, height / 2, 0);
+        group.add(pillar);
+    }
+
+    // --- 6. PUERTAS ---
+    const doorL = new THREE.Mesh(new THREE.BoxGeometry(entranceWidth / 2, pillarHeight, 0.1), glassMaterial);
+    doorL.name = "DoorLeft";
+    doorL.position.set(-(entranceWidth / 4), pillarHeight / 2, radius);
+    group.add(doorL);
+    const doorR = new THREE.Mesh(new THREE.BoxGeometry(entranceWidth / 2, pillarHeight, 0.1), glassMaterial);
+    doorR.name = "DoorRight";
+    doorR.position.set(entranceWidth / 4, pillarHeight / 2, radius);
+    group.add(doorR);
+
+    // --- 7. TECHOS ---
+    const ceiling = new THREE.Mesh(new THREE.CircleGeometry(radius, 64), darkMaterial);
+    ceiling.rotation.x = Math.PI / 2;
     ceiling.position.y = height;
     group.add(ceiling);
 
-    // 3. CARRILES DE LUZ SIMULADOS 
-    // Esto es visual, las luces reales las pondremos en los cuadros.
     const lightTrackMat = new THREE.MeshBasicMaterial({ color: 0xaaaaaa });
-    
-    // Carril interior 
-    const track1Geo = new THREE.RingGeometry(9, 10, 64);
-    const track1 = new THREE.Mesh(track1Geo, lightTrackMat);
-    track1.rotation.x = Math.PI / 2;
-    track1.position.y = height - 0.05; // Justo debajo del techo
+    const track1 = new THREE.Mesh(new THREE.RingGeometry(9, 10, 64), lightTrackMat);
+    track1.rotation.x = Math.PI / 2; track1.position.y = height - 0.05;
     group.add(track1);
-
-    
-    const track2Geo = new THREE.RingGeometry(18, 19, 64);
-    const track2 = new THREE.Mesh(track2Geo, lightTrackMat);
-    track2.rotation.x = Math.PI / 2;
-    track2.position.y = height - 0.05;
+    const track2 = new THREE.Mesh(new THREE.RingGeometry(18, 19, 64), lightTrackMat);
+    track2.rotation.x = Math.PI / 2; track2.position.y = height - 0.05;
     group.add(track2);
+
+    // Domo Estructural (Techo del edificio)
+    const roofDome = new THREE.Mesh(new THREE.SphereGeometry(radius, 64, 32, 0, Math.PI * 2, 0, Math.PI / 2), roofDomeMaterial);
+    roofDome.position.y = height;
+    roofDome.scale.set(1, 0.33, 1); 
+    group.add(roofDome);
+
+    // --- 8. MARCO DE ENTRADA ---
+    const frameGroup = new THREE.Group();
+    const pG = new THREE.BoxGeometry(0.3, pillarHeight, 0.5);
+    const pL = new THREE.Mesh(pG, accentMaterial);
+    pL.name = "Obstacle";
+    pL.position.set(radius * Math.sin(gapAngle / 2), pillarHeight / 2, radius * Math.cos(gapAngle / 2));
+    pL.lookAt(0, pillarHeight / 2, 0); 
+    frameGroup.add(pL);
+    const pR = new THREE.Mesh(pG, accentMaterial);
+    pR.name = "Obstacle";
+    pR.position.set(radius * Math.sin(-gapAngle / 2), pillarHeight / 2, radius * Math.cos(-gapAngle / 2));
+    pR.lookAt(0, pillarHeight / 2, 0);
+    frameGroup.add(pR);
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(entranceWidth + 0.5, 0.3, 0.5), accentMaterial);
+    beam.name = "Obstacle";
+    beam.position.set(0, pillarHeight, radius - 0.1); 
+    frameGroup.add(beam);
+    group.add(frameGroup);
 
     return group;
 }

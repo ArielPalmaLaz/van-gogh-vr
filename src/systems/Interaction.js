@@ -54,7 +54,6 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
     function handleInteraction(rayOrigin, rayDirection, actionType) {
         raycaster.set(rayOrigin, rayDirection);
 
-        // A. PANEL (MODIFICADO PARA BLOQUEAR EL MUNDO)
         if (currentPanel) {
             if (actionType === 'SELECT') {
                 const intersects = raycaster.intersectObjects(currentPanel.children, true);
@@ -63,34 +62,38 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
                     const target = hit.object.userData.isButton ? hit.object : hit.object.parent;
                     if (target.userData.action) target.userData.action();
                 }
-                // Si hay un panel, el flujo termina aquí para SELECT
                 return; 
             }
-            if (actionType === 'MOVE') {
-                // Si hay un panel, bloqueamos el teletransporte
-                return; 
-            }
+            if (actionType === 'MOVE') return; 
         }
 
-        // B. MUNDO (Solo llegamos aquí si NO hay panel abierto)
-        const intersects = raycaster.intersectObjects(scene.children, true);
-        const hit = intersects.find(hit => {
-            if (hit.object.name === "GlobalDimmer") return false;
-            if (!hit.object.isMesh || !hit.object.visible) return false;
-            let obj = hit.object;
+        // --- LÓGICA DE OBSTÁCULOS ---
+        const allIntersects = raycaster.intersectObjects(scene.children, true);
+        
+        // Filtramos para ignorar el dimmer y al propio jugador
+        const validIntersects = allIntersects.filter(h => {
+            if (h.object.name === "GlobalDimmer") return false;
+            let obj = h.object;
             while(obj) {
                 if (obj === userGroup) return false;
                 obj = obj.parent;
             }
-            if (actionType === 'SELECT') return hit.object.userData && hit.object.userData.isInteractable;
-            else if (actionType === 'MOVE') return hit.object.name === "WorldFloor";
+            return h.object.visible;
         });
 
-        if (hit) {
-            if (actionType === 'SELECT') {
+        if (validIntersects.length > 0) {
+            const firstHit = validIntersects[0].object;
+
+            // Si lo primero que golpeamos es un obstáculo, bloqueamos todo
+            if (firstHit.name === "Obstacle" || firstHit.parent?.name === "Obstacle") {
+                console.log("Movimiento bloqueado por muro");
+                return;
+            }
+
+            if (actionType === 'SELECT' && firstHit.userData?.isInteractable) {
                 dimmer.visible = true;
                 teleportMarker.visible = false;
-                currentPanel = createInfoPanel(hit.object.userData, () => {
+                currentPanel = createInfoPanel(firstHit.userData, () => {
                     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
                     scene.remove(currentPanel);
                     currentPanel = null;
@@ -98,25 +101,17 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
                     resetHover(); 
                 });
                 
-                const distance = 1.5; 
                 const direction = new THREE.Vector3();
                 camera.getWorldDirection(direction);
-                direction.y = 0; 
-                direction.normalize();
-                const targetPos = new THREE.Vector3().copy(userGroup.position).add(direction.multiplyScalar(distance));
+                direction.y = 0; direction.normalize();
+                const targetPos = new THREE.Vector3().copy(userGroup.position).add(direction.multiplyScalar(1.5));
                 targetPos.y = 1.6;
                 currentPanel.position.copy(targetPos);
                 currentPanel.lookAt(userGroup.position.x, 1.6, userGroup.position.z);
-                currentPanel.traverse((child) => {
-                    if (child.isMesh) {
-                        child.renderOrder = 1000;
-                        child.material.depthTest = false; 
-                    }
-                });
                 scene.add(currentPanel);
 
-            } else if (actionType === 'MOVE') {
-                const p = hit.point;
+            } else if (actionType === 'MOVE' && firstHit.name === "WorldFloor") {
+                const p = validIntersects[0].point;
                 const offset = new THREE.Vector3().subVectors(p, userGroup.position);
                 offset.y = 0;
                 userGroup.position.add(offset);
@@ -151,40 +146,51 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
                     document.body.style.cursor = 'default';
                 }
             }
-            return; // Bloquea hover de cuadros si el panel está abierto
+            return;
         }
 
-        const intersects = raycaster.intersectObjects(scene.children, true);
-        const hitArt = intersects.find(hit => hit.object.userData && hit.object.userData.isInteractable);
-        const hitFloor = intersects.find(hit => hit.object.name === "WorldFloor");
+        // Evaluar obstáculos en tiempo real para el marcador
+        const allIntersects = raycaster.intersectObjects(scene.children, true);
+        const validIntersects = allIntersects.filter(h => h.object.visible && h.object.name !== "GlobalDimmer");
 
-        if (hitArt) {
-            teleportMarker.visible = false;
-            const target = hitArt.object;
-            if (hoveredObject !== target) {
-                resetHover(); 
-                hoveredObject = target;
-                document.body.style.cursor = 'pointer';
-                if (target.parent) {
-                    const spot = target.parent.children.find(c => c.isSpotLight);
+        if (validIntersects.length > 0) {
+            const firstHit = validIntersects[0].object;
+
+            // Si el rayo choca con un muro, ocultamos indicador de teletransporte
+            if (firstHit.name === "Obstacle" || firstHit.parent?.name === "Obstacle") {
+                resetHover();
+                teleportMarker.visible = false;
+                return;
+            }
+
+            // Check Art Hover
+            if (firstHit.userData && firstHit.userData.isInteractable) {
+                teleportMarker.visible = false;
+                if (hoveredObject !== firstHit) {
+                    resetHover(); 
+                    hoveredObject = firstHit;
+                    document.body.style.cursor = 'pointer';
+                    const spot = firstHit.parent?.children.find(c => c.isSpotLight);
                     if (spot) {
                         savedIntensity = spot.intensity; 
                         spot.intensity = savedIntensity * 2.5; 
                     }
                 }
+            } 
+            // Check Floor Hover
+            else if (firstHit.name === "WorldFloor") {
+                resetHover();
+                teleportMarker.visible = true;
+                teleportMarker.position.copy(validIntersects[0].point);
+                teleportMarker.position.y += 0.02; 
+            } else {
+                resetHover();
+                teleportMarker.visible = false;
             }
-        } else if (hitFloor) {
-            resetHover();
-            teleportMarker.visible = true;
-            teleportMarker.position.copy(hitFloor.point);
-            teleportMarker.position.y += 0.02; 
-        } else {
-            resetHover();
-            teleportMarker.visible = false;
         }
     }
 
-    // Listeners de ratón y VR se mantienen iguales...
+    // Event Listeners...
     const canvas = renderer.domElement;
     canvas.addEventListener('pointermove', onPointerMove);
     let mouseDownPos = new THREE.Vector2();
@@ -192,7 +198,7 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
     canvas.addEventListener('pointerup', (e) => {
         if (mouseDownPos.distanceTo(new THREE.Vector2(e.clientX, e.clientY)) < 10) {
             mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
             if (e.button === 0) handleInteraction(raycaster.ray.origin, raycaster.ray.direction, 'SELECT');
             else if (e.button === 2) handleInteraction(raycaster.ray.origin, raycaster.ray.direction, 'MOVE');
