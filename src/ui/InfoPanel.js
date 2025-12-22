@@ -30,21 +30,38 @@ function createTextTexture(text, fontSize = 30, maxWidth = 500, align = 'center'
     lines.forEach((l, i) => {
         context.fillText(l, x, 20 + (fontSize/2) + (i * (fontSize + 12)));
     });
-    return { texture: new THREE.CanvasTexture(canvas), width: canvas.width / 500, height: canvas.height / 500 }; 
+
+    const texture = new THREE.CanvasTexture(canvas);
+    // Aseguramos que los colores del texto sean nítidos
+    texture.colorSpace = THREE.SRGBColorSpace;
+    
+    return { texture, width: canvas.width / 500, height: canvas.height / 500 }; 
 }
 
 // Función auxiliar para botones
 function createButton(text, color, onClick) {
     const btnData = createTextTexture(text, 40, 200, 'center');
     const geometry = new THREE.PlaneGeometry(btnData.width, btnData.height);
-    const material = new THREE.MeshBasicMaterial({ map: btnData.texture, color: color, transparent: true });
+    
+    const material = new THREE.MeshBasicMaterial({ 
+        map: btnData.texture, 
+        color: color, 
+        transparent: true,
+        toneMapped: false, // <--- CLAVE: Ignora el oscurecimiento del motor de render
+        depthTest: false   // Asegura que se dibuje por encima visualmente
+    });
+    
     const mesh = new THREE.Mesh(geometry, material);
     mesh.userData = { isButton: true, action: onClick };
+    mesh.renderOrder = 1000; // Prioridad absoluta de dibujado
+    
     return mesh;
 }
 
 export function createInfoPanel(artworkData, closeCallback) {
     const group = new THREE.Group();
+    group.renderOrder = 1000; // El grupo entero se dibuja después de todo lo demás
+    
     const contentGroup = new THREE.Group();
     group.add(contentGroup);
 
@@ -66,10 +83,13 @@ export function createInfoPanel(artworkData, closeCallback) {
     const imgMesh = new THREE.Mesh(imgGeometry, new THREE.MeshBasicMaterial({ 
         map: texture, 
         color: artworkData.src ? 0xffffff : 0xff00ff,
-        transparent: true 
+        transparent: true,
+        toneMapped: false, // <--- CLAVE: Muestra el cuadro con sus colores originales
+        depthTest: false
     }));
     
     imgMesh.position.set(0, 0.6, 0.05); 
+    imgMesh.renderOrder = 1000;
     contentGroup.add(imgMesh);
 
     // --- Panel Derecho (Textos y Controles) ---
@@ -78,17 +98,29 @@ export function createInfoPanel(artworkData, closeCallback) {
     const titleData = createTextTexture(artworkData.title || "Sin Título", 50, 600, 'left');
     const titleMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(titleData.width, titleData.height),
-        new THREE.MeshBasicMaterial({ map: titleData.texture, transparent: true })
+        new THREE.MeshBasicMaterial({ 
+            map: titleData.texture, 
+            transparent: true,
+            toneMapped: false, // Texto brillante
+            depthTest: false 
+        })
     );
     titleMesh.position.set(rightPanelX, 1.2, 0.05); 
+    titleMesh.renderOrder = 1000;
     contentGroup.add(titleMesh);
 
     const descData = createTextTexture(artworkData.description || "...", 25, 600, 'left');
     const descMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(descData.width, descData.height),
-        new THREE.MeshBasicMaterial({ map: descData.texture, transparent: true })
+        new THREE.MeshBasicMaterial({ 
+            map: descData.texture, 
+            transparent: true,
+            toneMapped: false, // Texto brillante
+            depthTest: false 
+        })
     );
     descMesh.position.set(rightPanelX, 0.4, 0.05); 
+    descMesh.renderOrder = 1000;
     contentGroup.add(descMesh);
 
     // --- Botonera de Zoom ---

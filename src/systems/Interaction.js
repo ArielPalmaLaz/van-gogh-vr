@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { createInfoPanel } from '../ui/InfoPanel.js';
 
-export function setupInteraction(scene, renderer, camera, userGroup) {
+// Añadimos isAnimatingCheck como parámetro
+export function setupInteraction(scene, renderer, camera, userGroup, isAnimatingCheck) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     
@@ -52,6 +53,9 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
 
     // --- INTERACCIÓN (CLIC) ---
     function handleInteraction(rayOrigin, rayDirection, actionType) {
+        // BLOQUEO DURANTE ANIMACIÓN
+        if (isAnimatingCheck && isAnimatingCheck()) return;
+
         raycaster.set(rayOrigin, rayDirection);
 
         if (currentPanel) {
@@ -67,10 +71,8 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
             if (actionType === 'MOVE') return; 
         }
 
-        // --- LÓGICA DE OBSTÁCULOS ---
         const allIntersects = raycaster.intersectObjects(scene.children, true);
         
-        // Filtramos para ignorar el dimmer y al propio jugador
         const validIntersects = allIntersects.filter(h => {
             if (h.object.name === "GlobalDimmer") return false;
             let obj = h.object;
@@ -84,9 +86,7 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
         if (validIntersects.length > 0) {
             const firstHit = validIntersects[0].object;
 
-            // Si lo primero que golpeamos es un obstáculo, bloqueamos todo
             if (firstHit.name === "Obstacle" || firstHit.parent?.name === "Obstacle") {
-                console.log("Movimiento bloqueado por muro");
                 return;
             }
 
@@ -121,6 +121,13 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
 
     // --- HOVER Y MARCADOR ---
     function onPointerMove(event) {
+        // BLOQUEO DE EFECTOS VISUALES DURANTE ANIMACIÓN
+        if (isAnimatingCheck && isAnimatingCheck()) {
+            teleportMarker.visible = false;
+            resetHover();
+            return;
+        }
+
         mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
         mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
         raycaster.setFromCamera(mouse, camera);
@@ -149,21 +156,18 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
             return;
         }
 
-        // Evaluar obstáculos en tiempo real para el marcador
         const allIntersects = raycaster.intersectObjects(scene.children, true);
         const validIntersects = allIntersects.filter(h => h.object.visible && h.object.name !== "GlobalDimmer");
 
         if (validIntersects.length > 0) {
             const firstHit = validIntersects[0].object;
 
-            // Si el rayo choca con un muro, ocultamos indicador de teletransporte
             if (firstHit.name === "Obstacle" || firstHit.parent?.name === "Obstacle") {
                 resetHover();
                 teleportMarker.visible = false;
                 return;
             }
 
-            // Check Art Hover
             if (firstHit.userData && firstHit.userData.isInteractable) {
                 teleportMarker.visible = false;
                 if (hoveredObject !== firstHit) {
@@ -177,7 +181,6 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
                     }
                 }
             } 
-            // Check Floor Hover
             else if (firstHit.name === "WorldFloor") {
                 resetHover();
                 teleportMarker.visible = true;
@@ -190,7 +193,6 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
         }
     }
 
-    // Event Listeners...
     const canvas = renderer.domElement;
     canvas.addEventListener('pointermove', onPointerMove);
     let mouseDownPos = new THREE.Vector2();
@@ -209,7 +211,11 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
 
     const controller1 = renderer.xr.getController(0);
     const controller2 = renderer.xr.getController(1);
+    
     function onVRInteraction(event, type) {
+        // Bloqueo VR
+        if (isAnimatingCheck && isAnimatingCheck()) return;
+
         const controller = event.target;
         if (!controller.visible) return;
         const tempMatrix = new THREE.Matrix4();
@@ -218,6 +224,7 @@ export function setupInteraction(scene, renderer, camera, userGroup) {
         const rayDirection = new THREE.Vector3(0, 0, -1).applyMatrix4(tempMatrix);
         handleInteraction(rayOrigin, rayDirection, type);
     }
+
     controller1.addEventListener('select', (e) => onVRInteraction(e, 'SELECT'));
     controller2.addEventListener('select', (e) => onVRInteraction(e, 'SELECT'));
     controller1.addEventListener('squeeze', (e) => onVRInteraction(e, 'MOVE'));

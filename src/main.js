@@ -1,14 +1,15 @@
 import * as THREE from 'three';
-import { createScene } from './core/sceneSetup.js';
-import { createFloor } from './components/Floor.js';
-import { createRoom } from './components/Room.js';
-import { loadGallery } from './components/Gallery.js';
-import { createCentralGarden } from './components/CentralGarden.js';
-import { setupControllers } from './systems/Controllers.js';
-import { setupInteraction } from './systems/Interaction.js';
-import { setupCameraControls } from './systems/CameraControls.js';
 import { VRButton } from 'three/examples/jsm/webxr/VRButton.js';
+import { createScene } from './core/sceneSetup.js';
+import { createRoom } from './components/Room.js';
+import { createFloor } from './components/Floor.js';
+import { loadGallery } from './components/Gallery.js';
 import { setupAudio } from './components/Audio.js';
+import { setupControllers } from './systems/Controllers.js';
+import { setupCameraControls } from './systems/CameraControls.js';
+import { setupInteraction } from './systems/Interaction.js';
+import { createCentralGarden } from './components/CentralGarden.js';
+import { createDome } from './components/Dome.js';
 
 const { scene, camera, renderer } = createScene();
 document.getElementById('container').appendChild(renderer.domElement);
@@ -22,15 +23,21 @@ userGroup.add(camera);
 scene.add(createRoom());
 scene.add(createFloor());
 scene.add(createCentralGarden());
+scene.add(createDome());
 loadGallery(scene);
 setupAudio(camera);
 
 const { controller1, controller2 } = setupControllers(scene, renderer);
-userGroup.add(controller1); userGroup.add(controller2);
+userGroup.add(controller1); 
+userGroup.add(controller2);
 setupCameraControls(camera, renderer);
-setupInteraction(scene, renderer, camera, userGroup);
 
+// --- ESTADO DE ANIMACIÓN ---
 let isIntroAnimating = true;
+
+// Pasamos la comprobación de animación como una función flecha
+setupInteraction(scene, renderer, camera, userGroup, () => isIntroAnimating);
+
 const startPos = new THREE.Vector3(0, 0, 50);
 const targetPos = new THREE.Vector3(0, 0, 20); 
 let progress = 0;
@@ -46,7 +53,7 @@ renderer.setAnimationLoop(() => {
         if (progress <= 1) {
             userGroup.position.lerpVectors(startPos, targetPos, progress);
         } else {
-            isIntroAnimating = false;
+            isIntroAnimating = false; // Al terminar, setupInteraction permite clics automáticamente
         }
     }
 

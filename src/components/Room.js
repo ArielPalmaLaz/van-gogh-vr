@@ -1,5 +1,38 @@
 import * as THREE from 'three';
 
+// Función auxiliar para crear el modelo de la lámpara (fuera de createRoom para limpieza)
+function createCeilingLamp() {
+    const lampGroup = new THREE.Group();
+
+    // 1. Cable (un cilindro muy fino)
+    const cableGeo = new THREE.CylinderGeometry(0.01, 0.01, 1.2, 8);
+    const cableMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    const cable = new THREE.Mesh(cableGeo, cableMat);
+    cable.position.y = -0.6; // Desplazamos hacia abajo para que el origen sea el anclaje al techo
+    lampGroup.add(cable);
+
+    // 2. Pantalla de la lámpara (un cono abierto)
+    const shadeGeo = new THREE.CylinderGeometry(0.1, 0.4, 0.4, 32, 1, true);
+    const shadeMat = new THREE.MeshStandardMaterial({ 
+        color: 0x222222, 
+        side: THREE.DoubleSide,
+        metalness: 0.8,
+        roughness: 0.2
+    });
+    const shade = new THREE.Mesh(shadeGeo, shadeMat);
+    shade.position.y = -1.2;
+    lampGroup.add(shade);
+
+    // 3. Bombilla falsa (MeshBasic para que brille por sí sola sin emitir luz)
+    const bulbGeo = new THREE.SphereGeometry(0.12, 16, 16);
+    const bulbMat = new THREE.MeshBasicMaterial({ color: 0xfff0aa }); // Blanco cálido brillante
+    const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+    bulb.position.y = -1.2;
+    lampGroup.add(bulb);
+
+    return lampGroup;
+}
+
 export function createRoom() {
     const group = new THREE.Group();
     const radius = 25;       
@@ -34,7 +67,9 @@ export function createRoom() {
         color: 0x999999,      
         metalness: 0.9,
         roughness: 0.15,
-        side: THREE.FrontSide 
+        side: THREE.BackSide, // CAMBIADO A BACKSIDE para que sea visible desde dentro
+        transparent: false,   
+        opacity: 1.0
     });
 
     const accentMaterial = new THREE.MeshStandardMaterial({ 
@@ -44,9 +79,8 @@ export function createRoom() {
     });
 
     const darkMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x050505, 
-        roughness: 0.9, 
-        side: THREE.BackSide 
+        color: 0x151515, // Oscurecido un poco más el techo base
+        roughness: 0.9
     });
 
     const grassMaterial = new THREE.MeshStandardMaterial({ 
@@ -132,6 +166,29 @@ export function createRoom() {
     roofDome.position.y = height;
     roofDome.scale.set(1, 0.33, 1); 
     group.add(roofDome);
+
+    // --- NUEVO: GENERACIÓN DE LÁMPARAS DECORATIVAS ---
+    // Colocamos lámparas en dos anillos concéntricos
+    const rings = [
+        { r: 9.5, count: 8 },  // Sobre el primer carril
+        { r: 18.5, count: 14 } // Sobre el segundo carril
+    ];
+
+    rings.forEach(ring => {
+        for (let i = 0; i < ring.count; i++) {
+            const angle = (i / ring.count) * Math.PI * 2;
+            const lamp = createCeilingLamp();
+            
+            // Posicionamos la lámpara en el techo (altura = height)
+            lamp.position.set(
+                Math.cos(angle) * ring.r,
+                height,
+                Math.sin(angle) * ring.r
+            );
+            
+            group.add(lamp);
+        }
+    });
 
     // --- 8. MARCO DE ENTRADA ---
     const frameGroup = new THREE.Group();
